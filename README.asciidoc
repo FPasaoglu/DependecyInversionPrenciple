@@ -143,64 +143,7 @@ Evet soyut kodun nasıl olacağı ve neden Dependency Inversion Prensibini kulla
 
 İlk olarak UML diyagramı inceleyelim.
 
-[uml,file="dependency.png"] 
-----
-
-class Trendyol {
-+{static} main(String args[]): void
-
-}
-
-
-class Shopping {
-
-+List<Product> products;
-
-+addProduct2List(Product product) : void
-
-+orderProducts() : void
-
-}
-
-class Clothes{
-
--String serialNo;
-
-+Clothes(String serialNo);
-
-}
-
-class Electronic{
-
--String serialNo;
-
-+Electronic(String serialNo);
-
-}
-
-class Books{
-
--String serialNo;
-
-+Books(String serialNo);
-
-}
-
-interface Product{
-
-+void order();
-
-+String getBill();
-}
-
-Shopping o-- Product
-Product <|.. Clothes 
-Product <|.. Electronic
-Product <|.. Books
-Trendyol ..|> Shopping : <<use>>
-
-----
-
+image::dependency.png[]
 
 
 [source,]
