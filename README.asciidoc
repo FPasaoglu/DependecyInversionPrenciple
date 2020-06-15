@@ -1,0 +1,294 @@
+# Dependency Inversion Principle
+
+**S.O.L.I.D.** prensiplerinden olan Dependency Inversion türkçeye Bağımlılık Terslemesi diye çevirebileceğimiz bir metadolojidir. 
+
+NOTE: Prensibin amacı sınıflar arası bağımlılıkları en aza indirgemedir. 
+
+* Bu sayede alt seviye sınıflar ve üst seviye sınıflar birbirinden bağımsız olacaktır.
+
+* Alt seviye sınıf üzerinde yapılan kod değişikliği üst sınıfı çok etkilemeyebilir
+
+* Ama üst sınıf üzerinde yapılacak bir kod değişikliği tüm alt sınıfları etkileyeceğinden kodun esnekliğini bozacaktır. 
+
+
+## Çözüm
+
+Bağımlılıkları en aza indirgemek amacıyla çıkan Dependencey Inversion Prensibi temelinde üst ve alt sınıflar arasına bir soyut katman ekleme üzerine kuruludur. Böylece üst sınıf ve alt sınıf birbirinden bağımsız olacak aradaki soyut katman ile haberleşeceklerdir
+
+    Üst Sınıf -> Soyut Katman -> Alt Sınıf
+
+
+Şimdi hayali bir örneğimizle prensibi daha iyi kavrayalım.
+
+İlk olarak prensibi uygulamadığımız şekliyle kodun nasıl olacağını inceleyim.
+
+
+Örneğimiz Bir alışveriş sitesini örnek alsın ve içerisinde belirli çeşitlerde ürünler olsun.
+
+[source,]
+----
+public class Clothes{
+
+    String serialNo;
+
+    Clothes(String serialNo){
+        this.serialNo = serialNo;
+    }
+----
+
+[source,]
+----
+public class Electronic{
+
+    String serialNo;
+
+    Electronic(String serialNo){
+        this.serialNo = serialNo;
+    }
+----
+
+
+[source,]
+----
+public class Shopping {
+<1>
+    List<Clothes> clothes = new ArrayList<>();
+    List<Electronic> electronic = new ArrayList<>();
+    
+<2>
+    clothes.add(new Clothes("A1243E"))
+    clothes.add(new Clothes("Y2792C"))
+    clothes.add(new Clothes("T6723U"))
+    
+    electronic.add(new Electronic("A1243E"))
+    electronic.add(new Electronic("Y2792C"))
+    electronic.add(new Electronic("T6723U"))
+
+<3>    
+    public void orderClothes(){
+        for(Clothes clothes : clothes){
+            clothes.order();
+        }
+    }
+    
+    public void orderElectronic(){
+        for(Electronic electronic : electronic){
+            electronic.order();
+        }
+    }
+
+}
+----
+
+<1> İlk olarak malzeme listesi oluşturuyoruz.Müşteri birden fazla ürün alabilir.
+
+<2> Malzemeleri seri numaralarıyla beraber ekliyoruz.El ile tek tek eklemek zorunda kalıyoruz. Sürekli aynı fonksiyon üzerinde işlem yaptığımızı görebilirsiniz.
+
+<3> Her bir ürün çeşidi için sipariş yöntemi belirleyecez ve tabiki farklı fonksiyonlar yazarak.
+
+[uml,]
+----
+class Shopping{
+
+}
+
+class Clothes{
+}
+
+class Electronic{
+
+}
+
+
+Shopping *-- Clothes
+Shopping *-- Electronic
+
+
+----
+
+Evet gördüğünüz gibi Dependency Inversion Prensibi kullanmadan kodumuzu yazdık. Zaten incelerseniz sürekli gözünüze batan aynı fonksiyonlar olduğunu görürsünüz.
+
+WARNING: Şimdi birde şöyle düşünelim . Biz elbise ve elektronik malzemeye ek yiyecek, kitaplar , filmler şeklinde yeni ürünler ekleyelim. Her yeni ürün eklememizde bu fonksiyonları tek tek yazmamız gerecek.
+
+Kodumuzun okunabilirliği ve esnekliğini arttırmak amacıyla **Dependency Inversion Prensibi**ni kullanmalıyız.
+
+Şimdi kodumuzu aynı şekilde Prensibi kullanarak yazalım.
+
+Clothes, electronics, yiyecek vb. her biri birer ürün olduğu için üst sınıf ile alt sınıf arasına bir soyut sınıf ekleyeceğiz. Bu sınıfımız Product isimli bir interface olacak ve Üst sınıf olan Shopping alt sınıf olan ürünlerden bağımsız olacak ve Product interface ile haberleşecekler.
+
+[uml,]
+----
+class Shopping{
+
+}
+
+class Clothes{
+}
+
+class Electronic{
+
+}
+
+interface Product
+
+Shopping o-- Product
+Product <|.. Clothes
+Product <|.. Electronic
+
+----
+
+Evet soyut kodun nasıl olacağı ve neden Dependency Inversion Prensibini kullanmamız gerektiğini anladık.
+
+Şimdi yazdığımız örnek bir kod ile pekiştirelim.
+
+İlk olarak UML diyagramı inceleyelim.
+
+[uml,file="dependency.png"] 
+----
+
+class Trendyol {
++{static} main(String args[]): void
+
+}
+
+
+class Shopping {
+
++List<Product> products;
+
++addProduct2List(Product product) : void
+
++orderProducts() : void
+
+}
+
+class Clothes{
+
+-String serialNo;
+
++Clothes(String serialNo);
+
+}
+
+class Electronic{
+
+-String serialNo;
+
++Electronic(String serialNo);
+
+}
+
+class Books{
+
+-String serialNo;
+
++Books(String serialNo);
+
+}
+
+interface Product{
+
++void order();
+
++String getBill();
+}
+
+Shopping o-- Product
+Product <|.. Clothes 
+Product <|.. Electronic
+Product <|.. Books
+Trendyol ..|> Shopping : <<use>>
+
+----
+
+
+
+[source,]
+----
+<1>
+public interface Product {
+   <2>
+   void order();
+    String getBill();
+}
+----
+<1> Soyut katmanımızı oluşturduk
+<2> Tüm ürünleri iki fonksiyona zorladık
+
+Şimdi Product sınıfından kalıtılan bir sınıfı inceleyelim.
+[source,]
+----
+public class Clothes implements Product{
+
+    String serialNo;
+<1>
+    Clothes(String serialNo){
+        this.serialNo = serialNo;
+    }
+<2>
+    @Override
+    public String getBill(){
+        return serialNo + " clothes has been ordered";
+    }
+<3>
+    @Override
+    public void order() {
+        System.out.println(getBill());
+    }
+}
+
+----
+<1> Ürün siparişi için seri numarası verilmesi gerek
+<2> Faturayı çıkartır
+<3> Sipariş işlemi yapılır
+
+Evet ürün sınıfımız hazır şimdi müşterinin yapacağı işlem için Shopping sınıfımıza bir göz atalım
+[source,]
+----
+public class Shopping {
+<1>
+    List<Product> products = new ArrayList<>();
+
+<2>
+    public void addProduct2List(Product product){
+        products.add(product);
+    }
+<3>
+    public void orderProducts(){
+        for(Product product : products){
+            product.order();
+        }
+    }
+
+}
+----
+<1> Her ürün için bir liste oluşturmak yerine Product listesi oluşturuyoruz.
+<2> Müşterinin belirlediği ürünleri sepete ekle
+<3> Ürünleri sipariş et
+
+Her şey hazır son olarak müşterinin işlemleri yapacağı bir sınıf oluşturalım.
+[source,]
+----
+public class Trendyol {
+
+    public static void main(String args[]){
+<1>
+        Shopping shopping = new Shopping();
+        shopping.addProduct2List(new Clothes("B1623C4"));
+        shopping.addProduct2List(new Electronic("A14C23F47"));
+        shopping.addProduct2List(new Books("H21F47L"));
+<2>
+        shopping.orderProducts();
+
+    }
+
+
+}
+----
+<1> Shopping sınıfından bir nesne oluşturuyoruz ve sepete ürünleri seri numaralarıyla ekliyoruz
+<2> Ürünlerin siparişini ver.
+
+
+OUTPUT:
+
+image::dependencyInversion.png[]
